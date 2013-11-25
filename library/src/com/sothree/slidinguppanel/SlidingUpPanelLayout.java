@@ -142,6 +142,11 @@ public class SlidingUpPanelLayout extends ViewGroup {
          * @param slideOffset The new offset of this sliding pane within its range, from 0-1
          */
         public void onPanelSlide(View panel, float slideOffset);
+
+        public void onPanelCollapsing(View panel);
+
+        public void onPanelExpanding(View panel);
+
         /**
          * Called when a sliding pane becomes slid completely collapsed. The pane may or may not
          * be interactive at this point depending on if it's shown or hidden
@@ -164,6 +169,12 @@ public class SlidingUpPanelLayout extends ViewGroup {
     public static class SimplePanelSlideListener implements PanelSlideListener {
         @Override
         public void onPanelSlide(View panel, float slideOffset) {
+        }
+        @Override
+        public void onPanelCollapsing(View panel) {
+        }
+        @Override
+        public void onPanelExpanding(View panel) {
         }
         @Override
         public void onPanelCollapsed(View panel) {
@@ -256,6 +267,18 @@ public class SlidingUpPanelLayout extends ViewGroup {
     void dispatchOnPanelSlide(View panel) {
         if (mPanelSlideListener != null) {
             mPanelSlideListener.onPanelSlide(panel, getExternalSlideOffset());
+        }
+    }
+
+    void dispatchOnPanelExpanding(View panel) {
+        if (mPanelSlideListener != null) {
+            mPanelSlideListener.onPanelExpanding(panel);
+        }
+    }
+
+    void dispatchOnPanelCollapsing(View panel) {
+        if (mPanelSlideListener != null) {
+            mPanelSlideListener.onPanelCollapsing(panel);
         }
     }
 
@@ -677,7 +700,7 @@ public class SlidingUpPanelLayout extends ViewGroup {
      */
     public boolean isExpanded() {
         return mFirstLayout && mPreservedExpandedState
-                || !mFirstLayout && mCanSlide && mSlideOffsetInternal == 0;
+                || !mFirstLayout && mCanSlide && (mSlideableView.getTop() - getPaddingTop() == 0);
     }
 
     /**
@@ -794,6 +817,12 @@ public class SlidingUpPanelLayout extends ViewGroup {
         if (!mCanSlide) {
             // Nothing to do.
             return false;
+        }
+
+        if (isExpanded()) {
+            dispatchOnPanelCollapsing(mSlideableView);
+        } else if (mSlideOffsetInternal != 1) {
+            dispatchOnPanelExpanding(mSlideableView);
         }
 
         final int topBound = getPaddingTop();
@@ -929,7 +958,7 @@ public class SlidingUpPanelLayout extends ViewGroup {
         @Override
         public void onViewDragStateChanged(int state) {
             if (mDragHelper.getViewDragState() == ViewDragHelper.STATE_IDLE) {
-                if (mSlideOffsetInternal == 0) {
+                if (mSlideOffsetInternal < 0.01) {
                     updateObscuredViewVisibility();
                     dispatchOnPanelExpanded(mSlideableView);
                     mPreservedExpandedState = true;
@@ -960,6 +989,12 @@ public class SlidingUpPanelLayout extends ViewGroup {
             }
             mDragHelper.settleCapturedViewAt(releasedChild.getLeft(), top);
             invalidate();
+
+            if (top == getPaddingTop()) {
+                dispatchOnPanelExpanding(mSlideableView);
+            } else {
+                dispatchOnPanelCollapsing(mSlideableView);
+            }
         }
 
         @Override
