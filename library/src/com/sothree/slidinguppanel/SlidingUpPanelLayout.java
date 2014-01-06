@@ -819,9 +819,9 @@ public class SlidingUpPanelLayout extends ViewGroup {
             return false;
         }
 
-        if (isExpanded()) {
+        if (slideOffset != 0) {
             dispatchOnPanelCollapsing(mSlideableView);
-        } else if (mSlideOffsetInternal != 1) {
+        } else {
             dispatchOnPanelExpanding(mSlideableView);
         }
 
