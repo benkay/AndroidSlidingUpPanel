@@ -819,10 +819,12 @@ public class SlidingUpPanelLayout extends ViewGroup {
             return false;
         }
 
-        if (slideOffset != 0) {
-            dispatchOnPanelCollapsing(mSlideableView);
-        } else {
-            dispatchOnPanelExpanding(mSlideableView);
+        if (slideOffset != mSlideOffsetInternal) {
+            if (slideOffset != 0) {
+                dispatchOnPanelCollapsing(mSlideableView);
+            } else {
+                dispatchOnPanelExpanding(mSlideableView);
+            }
         }
 
         final int topBound = getPaddingTop();
